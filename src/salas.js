@@ -41,4 +41,8 @@ function QuitarJugador(idJugador) {
   }
 }
 
-module.exports = { crearSala, UnirSala, getSala, QuitarJugador };
+function getRooms() {
+    return sala;
+}
+
+module.exports = { crearSala, UnirSala, getSala, QuitarJugador, getRooms };

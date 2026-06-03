@@ -28,5 +28,8 @@ model DatosUsuario {
   partidasGanadas    Int      @default(0)
   preguntasCorrectas Int      @default(0)
   puntuacionTotal    Int      @default(0)
+  mejorPuntuacion    Int      @default(0)
+  rachaActual        Int      @default(0)
+  mejorRacha         Int      @default(0)
   actualizadoEn      DateTime @updatedAt
 }

@@ -54,6 +54,19 @@ app.get('/perfil/:userId', async (req, res) => {
   }
 });
 
+app.get('/salas', (req, res) => {
+    const { getRooms } = require('./src/salas');
+    const salas = getRooms();
+    const salasActivas = Object.values(salas)
+        .filter(sala => sala.state === 'waiting')
+        .map(sala => ({
+            codigo: sala.code,
+            jugadoresActuales: sala.players.length,
+            jugadoresMaximos: 8
+        }));
+    res.json({ success: true, salas: salasActivas });
+});
+
 // ─── SOCKET.IO ────────────────────────────────────────────────────────────────
 
 io.on('connection', (socket) => {
