@@ -1,5 +1,5 @@
 const { generarPregunta } = require('./preguntas');
-const { actualizarEstadisticas } = require('./auth');
+const { actualizarEstadisticas } = require('./usuarios');
 
 // Mapa de partidas solitarias activas: socketId → estado
 const partidasSolitarias = {};
