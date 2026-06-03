@@ -8,6 +8,7 @@ require('dotenv').config();
 const { registrar, login, obtenerPerfil, actualizarEstadisticas } = require('./src/usuarios');
 const { crearSala, UnirSala, getSala, QuitarJugador } = require('./src/salas');
 const { iniciarPartida, manejarRespuesta } = require('./src/logicaJuego');
+const { iniciarSolitario, manejarRespuestaSolitario, abandonarSolitario } = require('./src/logicaJuegoSolitario');
 
 const app = express();
 app.use(cors());
@@ -53,11 +54,25 @@ app.get('/perfil/:userId', async (req, res) => {
   }
 });
 
+app.get('/salas', (req, res) => {
+    const { getRooms } = require('./src/salas');
+    const salas = getRooms();
+    const salasActivas = Object.values(salas)
+        .filter(sala => sala.state === 'waiting')
+        .map(sala => ({
+            codigo: sala.code,
+            jugadoresActuales: sala.players.length,
+            jugadoresMaximos: 8
+        }));
+    res.json({ success: true, salas: salasActivas });
+});
+
 // ─── SOCKET.IO ────────────────────────────────────────────────────────────────
 
 io.on('connection', (socket) => {
   console.log('Cliente conectado:', socket.id);
 
+  //Juego en multijugador
   // Crear sala
   socket.on('crear_sala', ({ nombreJugador }, callback) => {
     try {
@@ -120,11 +135,18 @@ io.on('connection', (socket) => {
     }
   });
 
+  //Juego en solitario
+  socket.on('solitario:iniciar',   ({ userId }) => iniciarSolitario(io, socket, userId));
+  socket.on('solitario:responder', ({ indice }) => manejarRespuestaSolitario(io, socket, indice));
+  socket.on('solitario:abandonar', ()            => abandonarSolitario(socket));
+
+
   // Desconexión
   socket.on('disconnect', () => {
     console.log('Cliente desconectado:', socket.id);
     QuitarJugador(socket.id);
   });
+
 });
 
 // ─── ARRANCAR SERVIDOR ────────────────────────────────────────────────────────

@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `DatosUsuario` ADD COLUMN `mejorPuntuacion` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `mejorRacha` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `rachaActual` INTEGER NOT NULL DEFAULT 0;
