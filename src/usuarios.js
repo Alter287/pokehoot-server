@@ -76,14 +76,21 @@ async function obtenerPerfil(userId) {
   };
 }
 
-async function actualizarEstadisticas(userId, { gano, correctas, puntos }) {
+async function actualizarEstadisticas(userId, { gano, correctas, puntos, racha }) {
+  const datos = await prisma.datosUsuario.findUnique({
+    where: { usuarioId: userId }
+  });
+
   await prisma.datosUsuario.update({
     where: { usuarioId: userId },
     data: {
       partidasJugadas:    { increment: 1 },
       partidasGanadas:    { increment: gano ? 1 : 0 },
       preguntasCorrectas: { increment: correctas },
-      puntuacionTotal:    { increment: puntos }
+      puntuacionTotal:    { increment: puntos },
+      rachaActual:        racha,
+      mejorRacha:         racha > datos.mejorRacha ? racha : datos.mejorRacha,
+      mejorPuntuacion:    puntos > datos.mejorPuntuacion ? puntos : datos.mejorPuntuacion,
     }
   });
 }

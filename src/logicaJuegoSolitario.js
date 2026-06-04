@@ -154,7 +154,8 @@ async function finalizarSolitario(socket, partida, infoFallo) {
       await actualizarEstadisticas(partida.userId, {
         gano:       false,           // en solitario nunca se "gana", solo se supera racha
         correctas:  partida.ronda - 1, // la última fue fallo
-        puntos:     partida.puntuacion
+        puntos:     partida.puntuacion,
+        racha: partida.racha  // ← añadir esto
       });
     } catch (err) {
       console.error('Error guardando estadísticas solitario:', err);
@@ -188,7 +189,8 @@ async function abandonarSolitario(socket) {
       await actualizarEstadisticas(partida.userId, {
         gano:      false,
         correctas: partida.ronda > 0 ? partida.ronda - 1 : 0,
-        puntos:    partida.puntuacion
+        puntos:    partida.puntuacion,
+        racha: partida.racha  // ← añadir esto
       });
     } catch (err) {
       console.error('Error guardando estadísticas al abandonar:', err);
