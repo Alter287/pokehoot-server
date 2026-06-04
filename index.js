@@ -122,7 +122,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('solitario:iniciar',   ({ userId }) => iniciarSolitario(io, socket, userId));
-  socket.on('solitario:responder', ({ indice }) => manejarRespuestaSolitario(io, socket, indice));
+socket.on('solitario:responder', ({ indiceRespuesta }) => manejarRespuestaSolitario(io, socket, indiceRespuesta));
   socket.on('solitario:abandonar', ()            => abandonarSolitario(socket));
 
   socket.on('disconnect', () => {
