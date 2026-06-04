@@ -41,7 +41,10 @@ async function enviarSiguientePregunta(io, socket) {
   try {
     pregunta = await generarPregunta();
   } catch (err) {
-    socket.emit('solitario:error', { mensaje: 'Error generando pregunta, intenta de nuevo.' });
+    console.error('Error generando pregunta:', err.message);
+    // Reintentamos automáticamente en 1 segundo en vez de bloquear
+    partida.ronda -= 1; // no contamos esta ronda fallida
+    setTimeout(() => enviarSiguientePregunta(io, socket), 1000);
     return;
   }
 
