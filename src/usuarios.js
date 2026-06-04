@@ -68,10 +68,13 @@ async function obtenerPerfil(userId) {
     email: usuario.correo,
     creadoEn: usuario.creadoEn,
     estadisticas: {
-      partidasJugadas: usuario.datos.partidasJugadas,
-      partidasGanadas: usuario.datos.partidasGanadas,
+      partidasJugadas:    usuario.datos.partidasJugadas,
+      partidasGanadas:    usuario.datos.partidasGanadas,
       preguntasCorrectas: usuario.datos.preguntasCorrectas,
-      puntuacionTotal: usuario.datos.puntuacionTotal
+      puntuacionTotal:    usuario.datos.puntuacionTotal,
+      mejorPuntuacion:    usuario.datos.mejorPuntuacion, 
+      rachaActual:        usuario.datos.rachaActual,       
+      mejorRacha:         usuario.datos.mejorRacha,         
     }
   };
 }
