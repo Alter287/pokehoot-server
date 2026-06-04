@@ -67,33 +67,31 @@ app.get('/salas', (req, res) => {
 io.on('connection', (socket) => {
   console.log(`[SOCKET] Conectado: ${socket.id} | Total: ${io.engine.clientsCount}`);
 
-  socket.on('crear_sala', ({ nombreJugador }, callback) => {
+  socket.on('crear_sala', ({ nombreJugador }) => {
     try {
-      const sala = crearSala(socket.id, nombreJugador);
-      socket.join(sala.codigo);
-      console.log(`[SALA] Creada: ${sala.codigo} | Host: ${nombreJugador}`);
-      callback({ success: true, codigoSala: sala.codigo });
+        const sala = crearSala(socket.id, nombreJugador);
+        socket.join(sala.codigo);
+        console.log(`[SALA] Creada: ${sala.codigo} | Host: ${nombreJugador}`);
+        // En lugar de callback, emitimos evento de vuelta
+        socket.emit('sala_creada', { success: true, codigoSala: sala.codigo });
     } catch (e) {
-      console.error(`[SALA] Error al crear: ${e.message}`);
-      callback({ success: false, error: e.message });
+        console.error(`[SALA] Error al crear: ${e.message}`);
+        socket.emit('sala_creada', { success: false, error: e.message });
     }
   });
 
-  socket.on('unirse_sala', ({ codigoSala, nombreJugador }, callback) => {
+  socket.on('unirse_sala', ({ codigoSala, nombreJugador }) => {
     try {
-      console.log(`[SALA] ${nombreJugador} intentando unirse a ${codigoSala}`);
-      const resultado = unirSala(codigoSala, socket.id, nombreJugador);
-      if (!resultado.success) {
-        console.log(`[SALA] Error al unirse: ${resultado.error}`);
-        return callback(resultado);
-      }
-      socket.join(codigoSala);
-      console.log(`[SALA] ${nombreJugador} unido a ${codigoSala} | Jugadores: ${resultado.sala.jugadores.length}`);
-      io.to(codigoSala).emit('jugador_unido', { jugadores: resultado.sala.jugadores });
-      callback({ success: true });
+        const resultado = unirSala(codigoSala, socket.id, nombreJugador);
+        if (!resultado.success) {
+            socket.emit('resultado_unirse', resultado);
+            return;
+        }
+        socket.join(codigoSala);
+        io.to(codigoSala).emit('jugador_unido', { jugadores: resultado.sala.jugadores });
+        socket.emit('resultado_unirse', { success: true });
     } catch (e) {
-      console.error(`[SALA] Error al unirse: ${e.message}`);
-      callback({ success: false, error: e.message });
+        socket.emit('resultado_unirse', { success: false, error: e.message });
     }
   });
 
