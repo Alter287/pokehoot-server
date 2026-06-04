@@ -1,4 +1,4 @@
-const sala = {};
+const salas = {};
 
 function generarCodigoSala() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -6,43 +6,43 @@ function generarCodigoSala() {
 
 function crearSala(idHost, nombreJugador) {
   const codigo = generarCodigoSala();
-  sala[codigo] = {
-    codigo: codigo,
-    idHost: idHost,
+  salas[codigo] = {
+    codigo,
+    idHost,
     jugadores: [{ id: idHost, nombre: nombreJugador, puntuacion: 0 }],
     estado: 'esperando',
     preguntaActual: null,
     respuestas: {}
   };
-  return sala[codigo];
+  return salas[codigo];
 }
 
-function UnirSala(codigo, playerId, playerName) {
-  const room = sala[codigo];
-  if (!room) return { success: false, error: 'Sala no encontrada' };
-  if (room.state !== 'waiting') return { success: false, error: 'Partida en curso' };
-  if (room.players.length >= 8) return { success: false, error: 'Sala llena' };
+function unirSala(codigo, idJugador, nombreJugador) {
+  const sala = salas[codigo];
+  if (!sala) return { success: false, error: 'Sala no encontrada' };
+  if (sala.estado !== 'esperando') return { success: false, error: 'Partida en curso' };
+  if (sala.jugadores.length >= 8) return { success: false, error: 'Sala llena' };
 
-  room.players.push({ id: playerId, name: playerName, score: 0 });
-  return { success: true, room };
+  sala.jugadores.push({ id: idJugador, nombre: nombreJugador, puntuacion: 0 });
+  return { success: true, sala };
 }
 
 function getSala(codigo) {
-  return sala[codigo];
+  return salas[codigo];
 }
 
-function QuitarJugador(idJugador) {
-  for (const codigo in sala) {
-    const room = sala[codigo];
-    room.players = room.players.filter(p => p.id !== idJugador);
-    if (room.players.length === 0) {
-      delete sala[codigo];
+function quitarJugador(idJugador) {
+  for (const codigo in salas) {
+    const sala = salas[codigo];
+    sala.jugadores = sala.jugadores.filter(j => j.id !== idJugador);
+    if (sala.jugadores.length === 0) {
+      delete salas[codigo];
     }
   }
 }
 
-function getRooms() {
-    return sala;
+function getSalas() {
+  return salas;
 }
 
-module.exports = { crearSala, UnirSala, getSala, QuitarJugador, getRooms };
+module.exports = { crearSala, unirSala, getSala, quitarJugador, getSalas };

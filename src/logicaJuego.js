@@ -1,19 +1,16 @@
 const { generarPregunta } = require('./preguntas');
-const { getRoom } = require('./salas');
+const { getSala } = require('./salas');
 
 const RONDAS = 10;
 
 async function iniciarPartida(io, codigoSala, sala) {
-  sala.state = 'playing';
+  sala.estado = 'jugando';
 
   for (let i = 0; i < RONDAS; i++) {
-    // Generamos la pregunta
     const pregunta = await generarPregunta();
     sala.preguntaActual = pregunta;
     sala.respuestas = {};
 
-    // Enviamos la pregunta a todos los jugadores de la sala
-    // Sin la respuesta correcta para que no puedan hacer trampa
     io.to(codigoSala).emit('pregunta', {
       ronda: i + 1,
       totalRondas: RONDAS,
@@ -24,66 +21,55 @@ async function iniciarPartida(io, codigoSala, sala) {
       tiempoLimite: pregunta.tiempoLimite
     });
 
-    // Esperamos el tiempo limite de la pregunta
     await esperar(pregunta.tiempoLimite * 1000);
 
-    // Calculamos los resultados de la ronda
     const resultados = calcularResultados(sala, pregunta.respuestaCorrecta);
 
-    // Enviamos los resultados a todos
     io.to(codigoSala).emit('resultado_ronda', {
       respuestaCorrecta: pregunta.respuestaCorrecta,
       opcionCorrecta: pregunta.opciones[pregunta.respuestaCorrecta],
       resultados
     });
 
-    // Pausa de 3 segundos entre rondas para ver los resultados
     await esperar(3000);
   }
 
-  // Fin del juego
-  sala.state = 'finished';
-  const clasificacion = [...sala.players].sort((a, b) => b.score - a.score);
+  sala.estado = 'finalizada';
+  const clasificacion = [...sala.jugadores].sort((a, b) => b.puntuacion - a.puntuacion);
 
-  io.to(codigoSala).emit('fin_partida', {
-    clasificacion
-  });
+  io.to(codigoSala).emit('fin_partida', { clasificacion });
 }
 
 function manejarRespuesta(io, codigoSala, idJugador, indiceRespuesta) {
-  const sala = getRoom(codigoSala);
+  const sala = getSala(codigoSala);
 
-  // Comprobaciones de seguridad
   if (!sala) return;
-  if (sala.state !== 'playing') return;
-  if (sala.answers[idJugador] !== undefined) return; // ya respondió antes
+  if (sala.estado !== 'jugando') return;
+  if (sala.respuestas[idJugador] !== undefined) return;
 
-  // Guardamos la respuesta con el momento exacto en que respondió
-  sala.answers[idJugador] = {
+  sala.respuestas[idJugador] = {
     indiceRespuesta,
-    timestamp: Date.now()
+    momento: Date.now()
   };
 }
 
 function calcularResultados(sala, respuestaCorrecta) {
-  return sala.players.map(jugador => {
-    const respuesta = sala.answers[jugador.id];
+  return sala.jugadores.map(jugador => {
+    const respuesta = sala.respuestas[jugador.id];
     const correcto = respuesta?.indiceRespuesta === respuestaCorrecta;
 
-    // Calculamos puntos — más puntos si respondió más rápido
     let puntos = 0;
     if (correcto) {
       puntos = 1000;
+      jugador.puntuacion += puntos;
     }
-
-    if (correcto) jugador.score += puntos;
 
     return {
       idJugador: jugador.id,
-      nombre: jugador.name,
+      nombre: jugador.nombre,
       correcto,
       puntos,
-      puntuacionTotal: jugador.score,
+      puntuacionTotal: jugador.puntuacion,
       respondio: respuesta !== undefined
     };
   });

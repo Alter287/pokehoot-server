@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const { registrar, login, obtenerPerfil, actualizarEstadisticas } = require('./src/usuarios');
-const { crearSala, UnirSala, getSala, QuitarJugador } = require('./src/salas');
+const { crearSala, unirSala, getSala, quitarJugador, getSalas } = require('./src/salas');
 const { iniciarPartida, manejarRespuesta } = require('./src/logicaJuego');
 const { iniciarSolitario, manejarRespuestaSolitario, abandonarSolitario } = require('./src/logicaJuegoSolitario');
 
@@ -15,13 +15,10 @@ app.use(cors());
 app.use(express.json());
 
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: '*' }
-});
+const io = new Server(server, { cors: { origin: '*' } });
 
 // ─── RUTAS HTTP ───────────────────────────────────────────────────────────────
 
-// Registro de usuario nuevo
 app.post('/registro', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -32,7 +29,6 @@ app.post('/registro', async (req, res) => {
   }
 });
 
-// Login
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -43,7 +39,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Obtener perfil y estadísticas
 app.get('/perfil/:userId', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
@@ -55,16 +50,15 @@ app.get('/perfil/:userId', async (req, res) => {
 });
 
 app.get('/salas', (req, res) => {
-    const { getRooms } = require('./src/salas');
-    const salas = getRooms();
-    const salasActivas = Object.values(salas)
-        .filter(sala => sala.state === 'waiting')
-        .map(sala => ({
-            codigo: sala.code,
-            jugadoresActuales: sala.players.length,
-            jugadoresMaximos: 8
-        }));
-    res.json({ success: true, salas: salasActivas });
+  const salas = getSalas();
+  const salasActivas = Object.values(salas)
+    .filter(sala => sala.estado === 'esperando')
+    .map(sala => ({
+      codigo: sala.codigo,
+      jugadoresActuales: sala.jugadores.length,
+      jugadoresMaximos: 8
+    }));
+  res.json({ success: true, salas: salasActivas });
 });
 
 // ─── SOCKET.IO ────────────────────────────────────────────────────────────────
@@ -72,30 +66,26 @@ app.get('/salas', (req, res) => {
 io.on('connection', (socket) => {
   console.log('Cliente conectado:', socket.id);
 
-  //Juego en multijugador
-  // Crear sala
   socket.on('crear_sala', ({ nombreJugador }, callback) => {
     try {
       const sala = crearSala(socket.id, nombreJugador);
-      socket.join(sala.code);
-      console.log(`Sala creada: ${sala.code} por ${nombreJugador}`);
-      callback({ success: true, codigoSala: sala.code });
+      socket.join(sala.codigo);
+      console.log(`Sala creada: ${sala.codigo} por ${nombreJugador}`);
+      callback({ success: true, codigoSala: sala.codigo });
     } catch (e) {
       callback({ success: false, error: e.message });
     }
   });
 
-  // Unirse a sala
   socket.on('unirse_sala', ({ codigoSala, nombreJugador }, callback) => {
     try {
-      const resultado = UnirSala(codigoSala, socket.id, nombreJugador);
+      const resultado = unirSala(codigoSala, socket.id, nombreJugador);
       if (!resultado.success) return callback(resultado);
 
       socket.join(codigoSala);
 
-      // Avisar a todos en la sala de que entró alguien nuevo
       io.to(codigoSala).emit('jugador_unido', {
-        jugadores: resultado.room.players
+        jugadores: resultado.sala.jugadores
       });
 
       console.log(`${nombreJugador} se unió a la sala ${codigoSala}`);
@@ -105,28 +95,24 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Iniciar partida — solo el host puede hacerlo
   socket.on('iniciar_partida', async ({ codigoSala }) => {
     try {
       const sala = getSala(codigoSala);
       if (!sala) return;
-      if (sala.hostId !== socket.id) return; // solo el host
-      if (sala.players.length < 2) return;   // mínimo 2 jugadores
+      if (sala.idHost !== socket.id) return;
+      if (sala.jugadores.length < 2) return;
 
       console.log(`Partida iniciada en sala ${codigoSala}`);
       await iniciarPartida(io, codigoSala, sala);
-
     } catch (e) {
       console.error('Error al iniciar partida:', e.message);
     }
   });
 
-  // Respuesta de un jugador
   socket.on('responder', ({ codigoSala, indiceRespuesta }) => {
     manejarRespuesta(io, codigoSala, socket.id, indiceRespuesta);
   });
 
-  // Actualizar estadísticas al terminar partida
   socket.on('guardar_estadisticas', async ({ userId, gano, correctas, puntos }) => {
     try {
       await actualizarEstadisticas(userId, { gano, correctas, puntos });
@@ -135,18 +121,14 @@ io.on('connection', (socket) => {
     }
   });
 
-  //Juego en solitario
   socket.on('solitario:iniciar',   ({ userId }) => iniciarSolitario(io, socket, userId));
   socket.on('solitario:responder', ({ indice }) => manejarRespuestaSolitario(io, socket, indice));
   socket.on('solitario:abandonar', ()            => abandonarSolitario(socket));
 
-
-  // Desconexión
   socket.on('disconnect', () => {
     console.log('Cliente desconectado:', socket.id);
-    QuitarJugador(socket.id);
+    quitarJugador(socket.id);
   });
-
 });
 
 // ─── ARRANCAR SERVIDOR ────────────────────────────────────────────────────────
