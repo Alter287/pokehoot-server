@@ -1,3 +1,69 @@
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
+const { registrar, login, obtenerPerfil, actualizarEstadisticas } = require('./src/usuarios');
+const { crearSala, unirSala, getSala, quitarJugador, getSalas } = require('./src/salas');
+const { iniciarPartida, manejarRespuesta } = require('./src/logicaJuego');
+const { iniciarSolitario, manejarRespuestaSolitario, abandonarSolitario } = require('./src/logicaJuegoSolitario');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*',allowEIO3: true,
+    transports: ['polling', 'websocket'] } });
+
+// ─── RUTAS HTTP ───────────────────────────────────────────────────────────────
+
+app.post('/registro', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const usuario = await registrar(username, email, password);
+    res.json({ success: true, usuario });
+  } catch (e) {
+    res.status(400).json({ success: false, error: e.message });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const resultado = await login(email, password);
+    res.json({ success: true, ...resultado });
+  } catch (e) {
+    res.status(401).json({ success: false, error: e.message });
+  }
+});
+
+app.get('/perfil/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const perfil = await obtenerPerfil(userId);
+    res.json({ success: true, perfil });
+  } catch (e) {
+    res.status(404).json({ success: false, error: e.message });
+  }
+});
+
+app.get('/salas', (req, res) => {
+  const salas = getSalas();
+  const salasActivas = Object.values(salas)
+    .filter(sala => sala.estado === 'esperando')
+    .map(sala => ({
+      codigo: sala.codigo,
+      jugadoresActuales: sala.jugadores.length,
+      jugadoresMaximos: 8
+    }));
+  res.json({ success: true, salas: salasActivas });
+});
+
+// ─── SOCKET.IO ────────────────────────────────────────────────────────────────
+
 io.on('connection', (socket) => {
   console.log(`[SOCKET] Conectado: ${socket.id} | Total: ${io.engine.clientsCount}`);
 
@@ -65,4 +131,11 @@ io.on('connection', (socket) => {
     console.log(`[SOCKET] Desconectado: ${socket.id} | Total: ${io.engine.clientsCount}`);
     quitarJugador(socket.id);
   });
+});
+
+// ─── ARRANCAR SERVIDOR ────────────────────────────────────────────────────────
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
