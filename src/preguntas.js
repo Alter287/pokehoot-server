@@ -2,12 +2,13 @@ const axios = require('axios');
 
 const TOTAL_POKEMON = 1025;
 
-const TIPOS = [
-  'fuego', 'agua', 'planta', 'electrico', 'psiquico', 'fantasma',
-  'dragon', 'siniestro', 'acero', 'hada', 'lucha', 'roca',
-  'tierra', 'volador', 'veneno', 'bicho', 'hielo', 'normal'
-];
-
+const TIPO_TRADUCCION = {
+  normal: 'normal', fire: 'fuego', water: 'agua', electric: 'electrico',
+  grass: 'planta', ice: 'hielo', fighting: 'lucha', poison: 'veneno',
+  ground: 'tierra', flying: 'volador', psychic: 'psiquico', bug: 'bicho',
+  rock: 'roca', ghost: 'fantasma', dragon: 'dragon', dark: 'siniestro',
+  steel: 'acero', fairy: 'hada',
+};
 // ─── Pesos de aparición por tipo de pregunta ─────────────────────────────────
 // Total = 100. género <-> evolución intercambiados respecto a la versión anterior.
 const TIPOS_PREGUNTA_PESOS = [
@@ -96,7 +97,7 @@ async function preguntaNombre(pokemon) {
  
 /** TIPO — imagen normal, ¿de qué tipo es? */
 async function preguntaTipo(pokemon) {
-  const tiposCorrecto = pokemon.types.map(t => t.type.name);
+  const tiposCorrecto = pokemon.types.map(t => TIPO_TRADUCCION[t.type.name] || t.type.name);
   const tipoCorrecto = tiposCorrecto[0];
   const tiposFalsos = mezclar(TIPOS.filter(t => !tiposCorrecto.includes(t))).slice(0, 3);
   const opciones = mezclar([tipoCorrecto, ...tiposFalsos]);
