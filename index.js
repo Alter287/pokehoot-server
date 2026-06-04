@@ -88,8 +88,15 @@ io.on('connection', (socket) => {
             return;
         }
         socket.join(codigoSala);
+        
+        // Avisar a todos los demás de que entró alguien
         io.to(codigoSala).emit('jugador_unido', { jugadores: resultado.sala.jugadores });
-        socket.emit('resultado_unirse', { success: true });
+        
+        // Mandar al nuevo jugador la lista completa
+        socket.emit('resultado_unirse', { 
+            success: true, 
+            jugadores: resultado.sala.jugadores  // ← añade esto
+        });
     } catch (e) {
         socket.emit('resultado_unirse', { success: false, error: e.message });
     }
