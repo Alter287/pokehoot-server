@@ -24,14 +24,15 @@ const TIPOS_PREGUNTA_PESOS = [
  
 // ─── Rangos de IDs por generación ────────────────────────────────────────────
 const GENERACIONES = [
-  { gen: 1, nombre: 'Generación I',   min: 1,   max: 151  },
-  { gen: 2, nombre: 'Generación II',  min: 152,  max: 251  },
-  { gen: 3, nombre: 'Generación III', min: 252,  max: 386  },
-  { gen: 4, nombre: 'Generación IV',  min: 387,  max: 493  },
-  { gen: 5, nombre: 'Generación V',   min: 494,  max: 649  },
-  { gen: 6, nombre: 'Generación VI',  min: 650,  max: 721  },
-  { gen: 7, nombre: 'Generación VII', min: 722,  max: 809  },
-  { gen: 8, nombre: 'Generación VIII',min: 810,  max: 898  },
+  { gen: 1, nombre: 'Generación 1',   min: 1,   max: 151  },
+  { gen: 2, nombre: 'Generación 2',  min: 152,  max: 251  },
+  { gen: 3, nombre: 'Generación 3', min: 252,  max: 386  },
+  { gen: 4, nombre: 'Generación 4',  min: 387,  max: 493  },
+  { gen: 5, nombre: 'Generación 5',   min: 494,  max: 649  },
+  { gen: 6, nombre: 'Generación 6',  min: 650,  max: 721  },
+  { gen: 7, nombre: 'Generación 7', min: 722,  max: 809  },
+  { gen: 8, nombre: 'Generación 8',min: 810,  max: 905  },
+  { gen: 9, nombre: 'Generación 9',min: 906,  max: 1025  },
 ];
  
 function obtenerGeneracion(id) {
