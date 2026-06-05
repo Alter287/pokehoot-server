@@ -132,8 +132,20 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log(`[SOCKET] Desconectado: ${socket.id} | Total: ${io.engine.clientsCount}`);
+    
+    // Buscar si era host de alguna sala antes de borrarla
+    const salas = getSalas();
+    for (const codigo in salas) {
+        const sala = salas[codigo];
+        if (sala.idHost === socket.id) {
+            io.to(codigo).emit('sala_cerrada', { mensaje: 'El host ha abandonado la sala' });
+            break;
+        }
+    }
+    
     quitarJugador(socket.id);
-  });
+    io.emit('salas_actualizadas'); // avisar a todos que la lista cambió
+});
 });
 
 // ─── ARRANCAR SERVIDOR ────────────────────────────────────────────────────────
