@@ -18,7 +18,8 @@ async function iniciarPartida(io, codigoSala, sala) {
       imagenUrl: pregunta.imagenUrl,
       silueta: pregunta.silueta,
       opciones: pregunta.opciones,
-      tiempoLimite: pregunta.tiempoLimite
+      tiempoLimite: pregunta.tiempoLimite,
+      tipo: pregunta.tipo   // ← añade esto
     });
 
     await esperar(pregunta.tiempoLimite * 1000);
