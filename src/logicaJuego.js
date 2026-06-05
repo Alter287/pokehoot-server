@@ -6,6 +6,7 @@ const RONDAS = 10;
 async function iniciarPartida(io, codigoSala, sala) {
   sala.estado = 'jugando';
 
+  //Lo hace 10 veces porque esa es la variable rondas
   for (let i = 0; i < RONDAS; i++) {
     let pregunta;
     try {

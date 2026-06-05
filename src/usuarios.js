@@ -7,6 +7,7 @@ const adapter = new PrismaMariaDb(process.env.DATABASE_URL);
 
 const prisma = new PrismaClient({ adapter });
 
+//Pa registra
 async function registrar(nombreUsuario, correo, contraseña) {
   const usuarioExistente = await prisma.usuario.findFirst({
     where: {
@@ -17,6 +18,7 @@ async function registrar(nombreUsuario, correo, contraseña) {
     }
   });
 
+  //Pasa el error para que se vea en la aplicacion
   if (usuarioExistente) {
     if (usuarioExistente.correo === correo) throw new Error('El email ya está en uso');
     if (usuarioExistente.nombre === nombreUsuario) throw new Error('El nombre de usuario ya está en uso');

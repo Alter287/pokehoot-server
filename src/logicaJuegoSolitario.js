@@ -6,7 +6,6 @@ const partidasSolitarias = {};
 
 /**
  * Inicia una partida solitaria para un jugador.
- * Se llama cuando el cliente emite 'solitario:iniciar'.
  */
 async function iniciarSolitario(io, socket, userId) {
   // Si ya tiene una partida activa la limpiamos
@@ -15,10 +14,10 @@ async function iniciarSolitario(io, socket, userId) {
   }
 
   partidasSolitarias[socket.id] = {
-    userId: userId || null,   // null si no está autenticado
+    userId: userId || null,   
     ronda: 0,
     puntuacion: 0,
-    racha: 0,                 // preguntas correctas seguidas (para bonus)
+    racha: 0,                 
     activa: true,
     timeoutId: null
   };
@@ -28,9 +27,7 @@ async function iniciarSolitario(io, socket, userId) {
   await enviarSiguientePregunta(io, socket);
 }
 
-/**
- * Genera y envía la siguiente pregunta al jugador.
- */
+// Genera y envía la siguiente pregunta
 async function enviarSiguientePregunta(io, socket) {
   const partida = partidasSolitarias[socket.id];
   if (!partida || !partida.activa) return;
@@ -43,7 +40,7 @@ async function enviarSiguientePregunta(io, socket) {
   } catch (err) {
     console.error('Error generando pregunta:', err.message);
     // Reintentamos automáticamente en 1 segundo en vez de bloquear
-    partida.ronda -= 1; // no contamos esta ronda fallida
+    partida.ronda -= 1; 
     setTimeout(() => enviarSiguientePregunta(io, socket), 1000);
     return;
   }
@@ -70,10 +67,7 @@ async function enviarSiguientePregunta(io, socket) {
   }, pregunta.tiempoLimite * 1000);
 }
 
-/**
- * Procesa la respuesta del jugador.
- * Se llama cuando el cliente emite 'solitario:responder'.
- */
+//Se llama cuando el cliente emite 'solitario:responder'.
 async function manejarRespuestaSolitario(io, socket, indiceRespuesta) {
   const partida = partidasSolitarias[socket.id];
   if (!partida || !partida.activa) return;
@@ -81,14 +75,12 @@ async function manejarRespuestaSolitario(io, socket, indiceRespuesta) {
 
   partida.respondio = true;
 
-  // Cancelamos el temporizador porque respondió a tiempo
   clearTimeout(partida.timeoutId);
 
   const pregunta = partida.preguntaActual;
   const correcto = indiceRespuesta === pregunta.respuestaCorrecta;
 
   if (correcto) {
-    // Calculamos puntos con bonus de racha
     partida.racha += 1;
     const bonusRacha = Math.floor(partida.racha / 3) * 100; // +100 cada 3 correctas seguidas
     const puntos = 1000 + bonusRacha;
@@ -105,7 +97,7 @@ async function manejarRespuestaSolitario(io, socket, indiceRespuesta) {
       racha:           partida.racha,
     });
 
-    // Pequeña pausa para que el jugador vea el resultado y continuamos
+    // Pequeña pausa para que el jugador vea el resultado
     await esperar(2500);
     await enviarSiguientePregunta(io, socket);
 
@@ -121,9 +113,7 @@ async function manejarRespuestaSolitario(io, socket, indiceRespuesta) {
   }
 }
 
-/**
- * Se dispara cuando el jugador no responde a tiempo.
- */
+//Se dispara cuando el jugador no responde a tiempo.
 async function manejarTimeout(io, socket) {
   const partida = partidasSolitarias[socket.id];
   if (!partida || !partida.activa || partida.respondio) return;
@@ -141,21 +131,19 @@ async function manejarTimeout(io, socket) {
   });
 }
 
-/**
- * Finaliza la partida, guarda estadísticas y emite el evento de fin.
- */
+//Finaliza la partida, guarda estadísticas y emite el evento de fin.
 async function finalizarSolitario(socket, partida, infoFallo) {
   partida.activa = false;
   clearTimeout(partida.timeoutId);
 
-  // Guardamos estadísticas si el jugador estaba autenticado
+  // Guardamos estadísticas
   if (partida.userId) {
     try {
       await actualizarEstadisticas(partida.userId, {
-        gano:       false,           // en solitario nunca se "gana", solo se supera racha
+        gano:       false,           
         correctas:  partida.ronda - 1, // la última fue fallo
         puntos:     partida.puntuacion,
-        racha: partida.racha  // ← añadir esto
+        racha: partida.racha
       });
     } catch (err) {
       console.error('Error guardando estadísticas solitario:', err);
@@ -172,10 +160,7 @@ async function finalizarSolitario(socket, partida, infoFallo) {
   limpiarPartida(socket.id);
 }
 
-/**
- * Abandono voluntario: el jugador cierra o pulsa "Salir".
- * Se llama cuando el cliente emite 'solitario:abandonar' o en 'disconnect'.
- */
+// Se llama cuando el cliente emite 'solitario:abandonar' o en 'disconnect'.
 async function abandonarSolitario(socket) {
   const partida = partidasSolitarias[socket.id];
   if (!partida || !partida.activa) return;

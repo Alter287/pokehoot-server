@@ -2,6 +2,7 @@ const axios = require('axios');
 
 const TOTAL_POKEMON = 1025;
 
+//Tipos
 const TIPO_TRADUCCION = {
   normal: 'normal', fire: 'fuego', water: 'agua', electric: 'electrico',
   grass: 'planta', ice: 'hielo', fighting: 'lucha', poison: 'veneno',
@@ -10,8 +11,7 @@ const TIPO_TRADUCCION = {
   steel: 'acero', fairy: 'hada',
 };
 
-// ─── Pesos de aparición por tipo de pregunta ─────────────────────────────────
-// Total = 100. género <-> evolución intercambiados respecto a la versión anterior.
+//  Pesos de aparición
 const TIPOS_PREGUNTA_PESOS = [
   { tipo: 'nombre',     peso: 30 }, // ¿Quién es este Pokémon? (silueta)
   { tipo: 'tipo',       peso: 18 }, // ¿De qué tipo es?
@@ -22,7 +22,7 @@ const TIPOS_PREGUNTA_PESOS = [
   { tipo: 'numero',     peso:  5 }, // ¿Cuál es su número en la Pokédex?
 ];
  
-// ─── Rangos de IDs por generación ────────────────────────────────────────────
+//Rangos de IDs por generación
 const GENERACIONES = [
   { gen: 1, nombre: 'Generación 1',   min: 1,   max: 151  },
   { gen: 2, nombre: 'Generación 2',  min: 152,  max: 251  },
@@ -39,12 +39,12 @@ function obtenerGeneracion(id) {
   return GENERACIONES.find(g => id >= g.min && id <= g.max) || GENERACIONES[0];
 }
  
-// ─── Utilidades ───────────────────────────────────────────────────────────────
+// Mezclar 
 function mezclar(arr) {
   return [...arr].sort(() => Math.random() - 0.5);
 }
  
-/** Elige un tipo de pregunta respetando los pesos definidos. */
+//Elige un tipo de pregunta.
 function elegirTipoPregunta() {
   const total = TIPOS_PREGUNTA_PESOS.reduce((s, t) => s + t.peso, 0);
   let r = Math.random() * total;
@@ -55,7 +55,7 @@ function elegirTipoPregunta() {
   return TIPOS_PREGUNTA_PESOS[0].tipo;
 }
  
-// ─── Fetchers ─────────────────────────────────────────────────────────────────
+// Conseguir cosas
 async function obtenerPokemonAleatorio() {
   const id = Math.floor(Math.random() * TOTAL_POKEMON) + 1;
   const res = await axios.get(`https://pokeapi.co/api/v2/pokemon/${id}`);
@@ -67,7 +67,6 @@ async function obtenerEspeciePokemon(id) {
   return res.data;
 }
  
-/** Devuelve todos los nombres de habilidades de la PokeAPI (para opciones falsas). */
 let _todasHabilidades = null;
 async function obtenerTodasHabilidades() {
   if (_todasHabilidades) return _todasHabilidades;
@@ -76,9 +75,9 @@ async function obtenerTodasHabilidades() {
   return _todasHabilidades;
 }
  
-// ─── Generadores de pregunta ──────────────────────────────────────────────────
+// Generadores de pregunta
  
-/** NOMBRE — silueta negra, ¿quién es este Pokémon? */
+// NOMBRE — silueta negra
 async function preguntaNombre(pokemon) {
   const falsos = await Promise.all([
     obtenerPokemonAleatorio(),
@@ -97,7 +96,7 @@ async function preguntaNombre(pokemon) {
   };
 }
  
-/** TIPO — imagen normal, ¿de qué tipo es? */
+// TIPO — imagen normal
 async function preguntaTipo(pokemon) {
   const tiposCorrecto = pokemon.types.map(t => TIPO_TRADUCCION[t.type.name] || t.type.name);
   const tipoCorrecto = tiposCorrecto[0];
@@ -114,7 +113,7 @@ async function preguntaTipo(pokemon) {
   };
 }
  
-/** NÚMERO — imagen normal, ¿cuál es su número en la Pokédex? */
+// NÚMERO — imagen normal
 async function preguntaNumero(pokemon) {
   const correcto = pokemon.id;
   const candidatos = [
@@ -135,7 +134,7 @@ async function preguntaNumero(pokemon) {
   };
 }
  
-/** GENERACIÓN — silueta, ¿de qué generación es? */
+// GENERACIÓN — silueta
 async function preguntaGeneracion(pokemon) {
   const genCorrecta = obtenerGeneracion(pokemon.id);
   const gensFalsas = mezclar(
@@ -153,14 +152,14 @@ async function preguntaGeneracion(pokemon) {
   };
 }
  
-/** HABILIDAD — imagen normal, ¿cuál de estas es una habilidad de X? */
+// HABILIDAD — imagen normal
 async function preguntaHabilidad(pokemon) {
   const habilidadesPropias = pokemon.abilities.map(a => a.ability.name);
-  // Elegimos UNA habilidad correcta al azar de las que tiene el pokemon
+  // Elegimos 1 habilidad correcta al azar de las que tiene
   const habilidadCorrecta = habilidadesPropias[Math.floor(Math.random() * habilidadesPropias.length)];
  
   const todasHabilidades = await obtenerTodasHabilidades();
-  // Falsas: cualquier habilidad que NO tenga el pokemon
+  // Falsas: cualquier habilidad que no tenga
   const falsas = mezclar(
     todasHabilidades.filter(h => !habilidadesPropias.includes(h))
   ).slice(0, 3);
@@ -179,7 +178,7 @@ async function preguntaHabilidad(pokemon) {
  
 /**
  * GÉNERO — solo se genera si el Pokémon tiene sprite diferente de hembra.
- * Muestra UNO de los dos sprites y pregunta si es hembra o macho.
+ * Muestra 1 de los 2 sprites y pregunta si es hembra o macho.
  * Devuelve null si el Pokémon no tiene diferencia visual de género.
  */
 async function preguntaGenero(pokemon) {
@@ -204,7 +203,6 @@ async function preguntaGenero(pokemon) {
   };
 }
  
-// ─── Mapa de triggers → texto legible ────────────────────────────────────────
 // Cubre todos los métodos de evolución conocidos en la PokeAPI.
 const TRIGGER_TEXTO = {
   // Nivel
@@ -258,7 +256,7 @@ function detalleATexto(d) {
   // Para level-up sin nivel mínimo, añadimos condición extra
   if (triggerName === 'level-up' && !d.min_level) {
     const extra = condicionExtra(d);
-    if (!extra) return null; // sin info útil
+    if (!extra) return null;
     return `Subir nivel${extra}`;
   }
  
@@ -272,7 +270,7 @@ function detalleATexto(d) {
   return base;
 }
  
-// Pool fijo de métodos de evolución falsos (usados cuando no hay suficientes reales)
+// Pool fijo de métodos de evolución falsos
 const METODOS_FALSOS_POOL = [
   'Nivel 16', 'Nivel 20', 'Nivel 28', 'Nivel 32', 'Nivel 36', 'Nivel 40',
   'Intercambio', 'Intercambio con metal-coat', 'Intercambio con dragon-scale',
@@ -308,7 +306,7 @@ async function preguntaEvolucion(pokemon) {
   function buscarDetalles(nodo, nombreBuscado) {
     for (const evo of nodo.evolves_to) {
       if (evo.species.name === nombreBuscado) {
-        return evo.evolution_details; // array de posibles métodos
+        return evo.evolution_details;
       }
       const resultado = buscarDetalles(evo, nombreBuscado);
       if (resultado) return resultado;
@@ -326,7 +324,7 @@ async function preguntaEvolucion(pokemon) {
  
   if (textosCorrecto.length === 0) return null;
  
-  // Elegimos uno al azar si hay varios métodos posibles (ej. Wurmple)
+  // Elegimos uno al azar si hay varios métodos posibles
   const respuestaCor = textosCorrecto[Math.floor(Math.random() * textosCorrecto.length)];
  
   // Opciones falsas: del pool fijo, sin coincidir con ningún método real
@@ -349,11 +347,10 @@ async function preguntaEvolucion(pokemon) {
   };
 }
  
-// ─── Función principal ────────────────────────────────────────────────────────
+// Función principal
 /**
- * Genera una pregunta aleatoria respetando los pesos.
- * Si el tipo elegido no es aplicable al pokemon (p.ej. "genero" sin diferencia),
- * reintenta automáticamente hasta un máximo de 5 veces antes de caer en "nombre".
+ * Genera una pregunta aleatoria
+ * Si el tipo elegido no es aplicable al pokemon, reintenta automáticamente hasta un máximo de 5 veces antes de caer en "nombre".
  */
 async function generarPregunta(intentos = 0) {
   if (intentos > 5) {

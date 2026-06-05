@@ -1,22 +1,25 @@
 const salas = {};
 
+// Genera un código aleatorio
 function generarCodigoSala() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+// Crea una nueva sala con el host como primer jugador
 function crearSala(idHost, nombreJugador) {
   const codigo = generarCodigoSala();
   salas[codigo] = {
     codigo,
     idHost,
     jugadores: [{ id: idHost, nombre: nombreJugador, puntuacion: 0 }],
-    estado: 'esperando',
+    estado: 'esperando',     //Pa que se pueda unir gente
     preguntaActual: null,
-    respuestas: {}
+    respuestas: {}          
   };
   return salas[codigo];
 }
 
+// Intenta unir a un jugador a la sala indicada por código, rechaza si la sala no existe, la partida ya empezó, o está llena
 function unirSala(codigo, idJugador, nombreJugador) {
   const sala = salas[codigo];
   if (!sala) return { success: false, error: 'Sala no encontrada' };
@@ -31,6 +34,7 @@ function getSala(codigo) {
   return salas[codigo];
 }
 
+// Elimina a un jugador de su sala cuando se desconecta, si el jugador era el host o era el último, la sala entera se borra.
 function quitarJugador(idJugador) {
   console.log(`[SALAS] Quitando jugador: ${idJugador}`);
   console.log(`[SALAS] Salas actuales: ${Object.keys(salas)}`);
@@ -51,6 +55,7 @@ function quitarJugador(idJugador) {
   console.log(`[SALAS] Salas tras borrar: ${Object.keys(salas)}`);
 }
 
+// Devuelve el objeto completo con todas las salas activas
 function getSalas() {
   return salas;
 }

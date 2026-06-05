@@ -18,7 +18,7 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*',allowEIO3: true,
     transports: ['polling', 'websocket'] } });
 
-// ─── RUTAS HTTP ───────────────────────────────────────────────────────────────
+// Rutas HTTP Para poder conectarse con la API
 
 app.post('/registro', async (req, res) => {
   try {
@@ -62,7 +62,7 @@ app.get('/salas', (req, res) => {
   res.json({ success: true, salas: salasActivas });
 });
 
-// ─── SOCKET.IO ────────────────────────────────────────────────────────────────
+//SOCKET.IO
 
 io.on('connection', (socket) => {
   console.log(`[SOCKET] Conectado: ${socket.id} | Total: ${io.engine.clientsCount}`);
@@ -163,8 +163,7 @@ io.on('connection', (socket) => {
 });
 });
 
-// ─── ARRANCAR SERVIDOR ────────────────────────────────────────────────────────
-
+// Inicia servidor
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
