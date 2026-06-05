@@ -71,14 +71,12 @@ io.on('connection', (socket) => {
     try {
         const sala = crearSala(socket.id, nombreJugador);
         socket.join(sala.codigo);
-        console.log(`[SALA] Creada: ${sala.codigo} | Host: ${nombreJugador}`);
-        // En lugar de callback, emitimos evento de vuelta
         socket.emit('sala_creada', { success: true, codigoSala: sala.codigo });
+        io.emit('salas_actualizadas'); // ← añade esto, avisa a todos
     } catch (e) {
-        console.error(`[SALA] Error al crear: ${e.message}`);
         socket.emit('sala_creada', { success: false, error: e.message });
     }
-  });
+});
 
   socket.on('unirse_sala', ({ codigoSala, nombreJugador }) => {
     try {
