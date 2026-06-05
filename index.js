@@ -148,6 +148,19 @@ io.on('connection', (socket) => {
           io.emit('salas_actualizadas');
       }, 500); // espera 500ms para asegurarse de que la sala ya está borrada
   });
+  
+  socket.on('salir_sala', ({ codigoSala }) => {
+    const sala = getSala(codigoSala);
+    if (!sala) return;
+
+    if (sala.idHost === socket.id) {
+        io.to(codigoSala).emit('sala_cerrada', { mensaje: 'El host ha abandonado la sala' });
+    }
+
+    quitarJugador(socket.id);
+    socket.leave(codigoSala);
+    io.emit('salas_actualizadas');
+});
 });
 
 // ─── ARRANCAR SERVIDOR ────────────────────────────────────────────────────────
