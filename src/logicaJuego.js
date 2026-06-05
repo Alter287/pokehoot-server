@@ -7,10 +7,20 @@ async function iniciarPartida(io, codigoSala, sala) {
   sala.estado = 'jugando';
 
   for (let i = 0; i < RONDAS; i++) {
-    const pregunta = await generarPregunta();
+    let pregunta;
+    try {
+      console.log(`[RONDA] Generando pregunta ronda ${i + 1}`);
+      pregunta = await generarPregunta();
+    } catch (e) {
+      console.error(`[RONDA] Error generando pregunta ronda ${i + 1}: ${e.message}`);
+      i--;
+      continue;
+    }
+
     sala.preguntaActual = pregunta;
     sala.respuestas = {};
 
+    console.log(`[RONDA] Emitiendo pregunta ronda ${i + 1}`);
     io.to(codigoSala).emit('pregunta', {
       ronda: i + 1,
       totalRondas: RONDAS,
@@ -19,10 +29,11 @@ async function iniciarPartida(io, codigoSala, sala) {
       silueta: pregunta.silueta,
       opciones: pregunta.opciones,
       tiempoLimite: pregunta.tiempoLimite,
-      tipo: pregunta.tipo   // ← añade esto
+      tipo: pregunta.tipo
     });
 
     await esperar(pregunta.tiempoLimite * 1000);
+    console.log(`[RONDA] Tiempo agotado ronda ${i + 1}`);
 
     const resultados = calcularResultados(sala, pregunta.respuestaCorrecta);
 
@@ -33,11 +44,11 @@ async function iniciarPartida(io, codigoSala, sala) {
     });
 
     await esperar(3000);
+    console.log(`[RONDA] Fin espera ronda ${i + 1}`);
   }
 
   sala.estado = 'finalizada';
   const clasificacion = [...sala.jugadores].sort((a, b) => b.puntuacion - a.puntuacion);
-
   io.to(codigoSala).emit('fin_partida', { clasificacion });
 }
 
