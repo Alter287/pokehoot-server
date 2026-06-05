@@ -32,15 +32,23 @@ function getSala(codigo) {
 }
 
 function quitarJugador(idJugador) {
+  console.log(`[SALAS] Quitando jugador: ${idJugador}`);
+  console.log(`[SALAS] Salas actuales: ${Object.keys(salas)}`);
+  
   for (const codigo in salas) {
     const sala = salas[codigo];
     const eraHost = sala.idHost === idJugador;
+    console.log(`[SALAS] Sala ${codigo} | Host: ${sala.idHost} | EraHost: ${eraHost} | Jugadores: ${sala.jugadores.length}`);
+    
     sala.jugadores = sala.jugadores.filter(j => j.id !== idJugador);
 
     if (sala.jugadores.length === 0 || eraHost) {
+      console.log(`[SALAS] Borrando sala ${codigo}`);
       delete salas[codigo];
     }
   }
+  
+  console.log(`[SALAS] Salas tras borrar: ${Object.keys(salas)}`);
 }
 
 function getSalas() {
