@@ -34,8 +34,10 @@ function getSala(codigo) {
 function quitarJugador(idJugador) {
   for (const codigo in salas) {
     const sala = salas[codigo];
+    const eraHost = sala.idHost === idJugador;
     sala.jugadores = sala.jugadores.filter(j => j.id !== idJugador);
-    if (sala.jugadores.length === 0) {
+
+    if (sala.jugadores.length === 0 || eraHost) {
       delete salas[codigo];
     }
   }
