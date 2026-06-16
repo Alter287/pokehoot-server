@@ -133,6 +133,8 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
       console.log(`[SOCKET] Desconectado: ${socket.id} | Total: ${io.engine.clientsCount}`);
       
+      abandonarSolitario(socket);
+
       const salas = getSalas();
       for (const codigo in salas) {
           const sala = salas[codigo];
