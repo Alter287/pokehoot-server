@@ -24,7 +24,7 @@ function unirSala(codigo, idJugador, nombreJugador) {
   const sala = salas[codigo];
   if (!sala) return { success: false, error: 'Sala no encontrada' };
   if (sala.estado !== 'esperando') return { success: false, error: 'Partida en curso' };
-  if (sala.jugadores.length >= 8) return { success: false, error: 'Sala llena' };
+  if (sala.jugadores.length >= 3) return { success: false, error: 'Sala llena' };
 
   sala.jugadores.push({ id: idJugador, nombre: nombreJugador, puntuacion: 0 });
   return { success: true, sala };

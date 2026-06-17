@@ -57,7 +57,7 @@ app.get('/salas', (req, res) => {
     .map(sala => ({
       codigo: sala.codigo,
       jugadoresActuales: sala.jugadores.length,
-      jugadoresMaximos: 8
+      jugadoresMaximos: 3
     }));
   res.json({ success: true, salas: salasActivas });
 });
